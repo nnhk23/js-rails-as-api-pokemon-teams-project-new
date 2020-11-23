@@ -30,39 +30,43 @@ function generateAllTrainers(trainers) {
         
         btn.innerText = "Add Pokemon"
         btn.dataset.trainer_id = trainer.id   
-        // btn.addEventListener('click', )
+        btn.addEventListener('click', (e) => addPokemon(e, trainer))
         
         trainer.pokemons.forEach(pokemon => {
-            const pokeItem = generateEachPokemon(pokemon)
-            ul.appendChild(pokeItem)
+            // const pokeItem = 
+            generateEachPokemon(ul, pokemon)
+            // ul.appendChild(pokeItem)
         })
-
-        // debugger
 
         div.append(p, btn, ul)
         main.appendChild(div)
     })
 }
 
-function generateEachPokemon(pokemon) {
+function generateEachPokemon(ul, pokemon, e) {
     const li = document.createElement('li')
     const pokeBtn = document.createElement('button')
-    
     li.innerText = `${pokemon.nickname} (${pokemon.species})`
     
     pokeBtn.innerText = "Release"
     pokeBtn.className = 'release'
     pokeBtn.dataset.pokemonID = pokemon.id
-    pokeBtn.addEventListener('click', (e) => deletePoke(e, pokemon))
+    pokeBtn.addEventListener('click', (event) => deletePoke(event, pokemon))
     // console.dir(pokeBtn)
 
     li.appendChild(pokeBtn)
-    return li  
+    // return li  
+    if(!ul) {
+        ul = e.target.parentNode.lastElementChild
+    }
+    return ul.appendChild(li)
 }
 
 function deletePoke (e, pokemon) {
-    e.target.parentNode.remove()
+    let poke = e.target.parentNode
     const id = pokemon.id
+    // console.log(e.target.parentNode)
+    e.target.parentNode.remove()
 
     const pokeObj = {
         method: 'DELETE',
@@ -70,15 +74,37 @@ function deletePoke (e, pokemon) {
             'Content-Type' : 'application/json',
             'Accept' : 'application/json'
         },
-        body: JSON.stringify({
-            "id": id,
-            "nickname": pokemon.nickname,
-            "species": pokemon.species,
-            "trainer_id": pokemon.trainer_id
-        })
+        body: JSON.stringify(poke)
     }
 
     fetch(POKEMONS_URL + `/${id}`, pokeObj)
-    .then(resp => resp.json())
-    .then(console.log)
 }
+
+function addPokemon(event, trainer) {
+    // debugger
+    let pokeObj = {
+        method: 'POST',
+        headers: {
+            'Content-Type' : 'application/json',
+            'Accept' : 'application/json'
+        },
+        body: JSON.stringify({
+            trainer_id: trainer.id
+        })
+    }
+
+    fetch(POKEMONS_URL, pokeObj)
+    .then(r => r.json())
+    .then(pokemon => {
+        generateEachPokemon(undefined, pokemon, event)
+        const list = document.querySelector('ul')
+        ul.innerHTML += ` <li>${pokemon.nickname} (${pokemon.species}) <button class="release" data-pokemon-id="${pokemon.id}">Release</button></li>`
+    })                                         
+}
+
+// function addPokemonToDom(pokemon, e) {
+//   if(pokemon.message){
+//     alert(pokemon.message)
+//   } else {
+//   }
+// }
